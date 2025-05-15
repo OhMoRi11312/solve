@@ -30,17 +30,12 @@ const allErasers: { label: string; value: PencilKitTool }[] = [
   { label: '고정폭 지우개', value: 'eraserFixedWidthBitmap' },
 ];
 
-function getRandomColor() {
-  const r = Math.floor(Math.random() * 256);
-  const g = Math.floor(Math.random() * 256);
-  const b = Math.floor(Math.random() * 256);
-  return `rgb(${r},${g},${b})`;
-}
-
 export default function App() {
   const ref = useRef<PencilKitRef>(null);
   const path = `${DocumentDirectoryPath}/drawing.dat`;
   const [imageBase64, setImageBase64] = useState('');
+  const [toolColors, setToolColors] = useState<Record<PencilKitTool, string>>({});
+  const [currentTool, setCurrentTool] = useState<PencilKitTool | null>(null);
 
   return (
     <View style={styles.container}>
@@ -125,24 +120,19 @@ export default function App() {
           <ToolButtons
             tools={allPens}
             variant={1}
-            onSelect={(p) =>
-              ref.current?.setTool({
-                toolType: p,
-                width: 3 + Math.random() * 5,
-                color: getRandomColor(),
-              })
-            }
+            onSelect={(tool) => {
+              const color = toolColors[tool] ?? 'black';
+              ref.current?.setTool({ toolType: tool, width: 4, color });
+              setCurrentTool(tool);
+            }}
           />
           <ToolButtons
             tools={allErasers}
             variant={2}
-            onSelect={(p) =>
-              ref.current?.setTool({
-                toolType: p,
-                width: 3 + Math.random() * 5,
-                color: getRandomColor(),
-              })
-            }
+            onSelect={(tool) => {
+              ref.current?.setTool({ toolType: tool, width: 4, color: 'black' });
+              setCurrentTool(tool);
+            }}
           />
         </ScrollView>
       </View>

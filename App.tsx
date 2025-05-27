@@ -4,9 +4,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import { enableScreens } from 'react-native-screens';
 import SplashScreen from 'react-native-splash-screen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler'; // ✅ 추가
 
 import HomeScreen from './screens/HomeScreen';
 import SolveScreen from './screens/SolveScreen';
+
 
 enableScreens();
 
@@ -34,6 +36,7 @@ export default function App() {
   }, []);
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}> {/* ✅ 여기로 감쌈 */}
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
@@ -87,6 +90,7 @@ export default function App() {
         />
       </Tab.Navigator>
     </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
 

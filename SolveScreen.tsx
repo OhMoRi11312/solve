@@ -6,13 +6,15 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Platform,
+  Platform, Button,
 } from 'react-native';
 import PencilKitView, {
   type PencilKitRef,
   type PencilKitTool,
 } from 'react-native-pencil-kit';
 import { DocumentDirectoryPath } from '@dr.pogodin/react-native-fs';
+import SlideOver from '../components/SlideOverPanel';
+import OMR from '../components/OMR';
 
 const allPens: { label: string; value: PencilKitTool }[] = [
   { label: '펜', value: 'pen' },
@@ -36,123 +38,165 @@ export default function App() {
   const [imageBase64, setImageBase64] = useState('');
   const [toolColors, setToolColors] = useState<Record<PencilKitTool, string>>({});
   const [currentTool, setCurrentTool] = useState<PencilKitTool | null>(null);
+  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: string[] }>({});
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+
+  function handleSubmit() {
+    console.log('선택된 답안:', selectedAnswers);
+
+    const answerKey = { 0: ['3'], 1: ['2'] };
+    let correct = 0;
+
+    Object.entries(answerKey).forEach(([qIndex, correctAnswer]) => {
+      const selected = selectedAnswers[+qIndex] || [];
+      if (
+        correctAnswer.length === selected.length &&
+        correctAnswer.every((val, i) => selected[i] === val)
+      ) {
+        correct += 1;
+      }
+    });
+  }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.toolbarContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.toolbar}
-        >
-          <View style={styles.buttonGroup}>
-            <Btn onPress={() => ref.current?.showToolPicker()} text="도구 보이기" />
-            <Btn onPress={() => ref.current?.hideToolPicker()} text="도구 숨기기" />
-            <Btn onPress={() => ref.current?.clear()} text="모두 지우기" />
-            <Btn onPress={() => ref.current?.undo()} text="실행 취소" />
-            <Btn onPress={() => ref.current?.redo()} text="다시 실행" />
+    <>
+      <SlideOver
+        visible={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        innerComponent={
+          <View>
+            <OMR
+              numQuestions={10}
+              optionsPerQuestion={['1', '2', '3', '4', '5']}
+              selectedAnswers={selectedAnswers}
+              setSelectedAnswers={setSelectedAnswers}
+            />
+            <Button title="제출 및 채점" onPress={handleSubmit} />
           </View>
+        }
+      />
 
-          <View style={styles.buttonGroup}>
-            <Btn
-              onPress={async () => {
-                try {
-                  const d = await ref.current?.saveDrawing(path);
-                  if (d) console.log(`save success, length: ${d.length}`);
-                } catch (e) {
-                  console.error('Save failed:', e);
-                }
-              }}
-              text="저장"
-            />
-            <Btn
-              onPress={async () => {
-                try {
-                  await ref.current?.loadDrawing(path);
-                } catch (e) {
-                  console.error('Load failed:', e);
-                }
-              }}
-              text="불러오기"
-            />
-            <Btn
-              onPress={async () => {
-                try {
-                  const d = await ref.current?.getBase64PngData({});
-                  if (d) {
-                    console.log(`get success, length: ${d.length}`);
-                    setImageBase64(d);
+      <View style={styles.container}>
+        <View style={styles.toolbarContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.toolbar}
+          >
+            <View style={styles.buttonGroup}>
+              <Btn onPress={() => ref.current?.showToolPicker()} text="도구 보이기" />
+              <Btn onPress={() => ref.current?.hideToolPicker()} text="도구 숨기기" />
+              <Btn onPress={() => ref.current?.clear()} text="모두 지우기" />
+              <Btn onPress={() => ref.current?.undo()} text="실행 취소" />
+              <Btn onPress={() => ref.current?.redo()} text="다시 실행" />
+            </View>
+
+            <View style={styles.buttonGroup}>
+              <Btn
+                onPress={async () => {
+                  try {
+                    const d = await ref.current?.saveDrawing(path);
+                    if (d) console.log(`save success, length: ${d.length}`);
+                  } catch (e) {
+                    console.error('Save failed:', e);
                   }
-                } catch (e) {
-                  console.error('Get PNG failed:', e);
-                }
-              }}
-              text="PNG로 저장"
-            />
-            <Btn
-              onPress={async () => {
-                try {
-                  const d = await ref.current?.getBase64JpegData();
-                  if (d) {
-                    console.log(`get success, length: ${d.length}`);
-                    setImageBase64(d);
+                }}
+                text="저장"
+              />
+              <Btn
+                onPress={async () => {
+                  try {
+                    await ref.current?.loadDrawing(path);
+                  } catch (e) {
+                    console.error('Load failed:', e);
                   }
-                } catch (e) {
-                  console.error('Get JPEG failed:', e);
-                }
+                }}
+                text="불러오기"
+              />
+              <Btn
+                onPress={async () => {
+                  try {
+                    const d = await ref.current?.getBase64PngData({});
+                    if (d) {
+                      console.log(`get success, length: ${d.length}`);
+                      setImageBase64(d);
+                    }
+                  } catch (e) {
+                    console.error('Get PNG failed:', e);
+                  }
+                }}
+                text="PNG로 저장"
+              />
+              <Btn
+                onPress={async () => {
+                  try {
+                    const d = await ref.current?.getBase64JpegData();
+                    if (d) {
+                      console.log(`get success, length: ${d.length}`);
+                      setImageBase64(d);
+                    }
+                  } catch (e) {
+                    console.error('Get JPEG failed:', e);
+                  }
+                }}
+                text="JPEG로 저장"
+              />
+              <Btn
+                onPress={() => ref.current?.loadBase64Data(imageBase64)}
+                text="Base64 불러오기"
+              />
+            </View>
+          </ScrollView>
+        </View>
+
+        <View style={styles.toolSelectorBar}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.toolButtons}
+          >
+            <ToolButtons
+              tools={allPens}
+              variant={1}
+              onSelect={(tool) => {
+                const color = toolColors[tool] ?? 'black';
+                ref.current?.setTool({ toolType: tool, width: 4, color });
+                setCurrentTool(tool);
               }}
-              text="JPEG로 저장"
+            />
+            <ToolButtons
+              tools={allErasers}
+              variant={2}
+              onSelect={(tool) => {
+                ref.current?.setTool({ toolType: tool, width: 4, color: 'black' });
+                setCurrentTool(tool);
+              }}
             />
             <Btn
-              onPress={() => ref.current?.loadBase64Data(imageBase64)}
-              text="Base64 불러오기"
+              text="Open Drawer"
+              onPress={() => setDrawerOpen(true)}
+              variant={2}
             />
-          </View>
-        </ScrollView>
-      </View>
+          </ScrollView>
+        </View>
 
-      <View style={styles.toolSelectorBar}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.toolButtons}
-        >
-          <ToolButtons
-            tools={allPens}
-            variant={1}
-            onSelect={(tool) => {
-              const color = toolColors[tool] ?? 'black';
-              ref.current?.setTool({ toolType: tool, width: 4, color });
-              setCurrentTool(tool);
-            }}
+        <View style={styles.canvasWrapper}>
+          <PencilKitView
+            ref={ref}
+            style={styles.canvas}
+            alwaysBounceVertical={false}
+            alwaysBounceHorizontal={false}
+            backgroundColor={'#f0ebc0'}
           />
-          <ToolButtons
-            tools={allErasers}
-            variant={2}
-            onSelect={(tool) => {
-              ref.current?.setTool({ toolType: tool, width: 4, color: 'black' });
-              setCurrentTool(tool);
-            }}
-          />
-        </ScrollView>
+          {imageBase64 ? (
+            <Image
+              style={styles.previewImage}
+              source={{ uri: imageBase64 }}
+            />
+          ) : null}
+        </View>
       </View>
-
-      <View style={styles.canvasWrapper}>
-        <PencilKitView
-          ref={ref}
-          style={styles.canvas}
-          alwaysBounceVertical={false}
-          alwaysBounceHorizontal={false}
-          backgroundColor={'#f0ebc0'}
-        />
-        {imageBase64 ? (
-          <Image
-            style={styles.previewImage}
-            source={{ uri: imageBase64 }}
-          />
-        ) : null}
-      </View>
-    </View>
+    </>
   );
 }
 

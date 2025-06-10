@@ -1,43 +1,69 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
 
-const App = () => {
+const WIDTH = Dimensions.get('window').width;
+
+const Dashboard = () => {
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.innerContainer}>
-        <Text style={styles.greeting}>Jaehoo님 반가워요!</Text>
-        <Text style={styles.subtitle}>오늘도 열공해볼까요?</Text>
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.innerContainer}>
+          <Text style={styles.greeting}>Jaehoo님 반가워요!</Text>
+          <Text style={styles.subtitle}>오늘도 열공해볼까요?</Text>
 
-        <View style={styles.horizontalSection}>
-          {/* 왼쪽 1/2 */}
-          <View style={styles.leftHalfBox}>
-            <Text style={styles.progressTitle}>내 진도</Text>
-            <Text style={styles.progressText}>0%</Text>
-            <Text style={styles.progressSubText}>0 / 2000단어</Text>
+          <View style={styles.cardRow}>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>총 학습량</Text>
+              <View style={styles.circle}>
+                <Text style={styles.percentText}>0%</Text>
+              </View>
+              <Text style={styles.cardFooter}>0/2000단어</Text>
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>내 진도</Text>
+              <View style={styles.circle}>
+                <Text style={styles.percentText}>0%</Text>
+              </View>
+              <Text style={styles.cardFooter}>0/2000단어</Text>
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>내 진도</Text>
+              <View style={styles.circle}>
+                <Text style={styles.percentText}>0%</Text>
+              </View>
+              <Text style={styles.cardFooter}>0/2000단어</Text>
+            </View>
           </View>
 
-          {/* 오른쪽 1/2 - 수평 3등분 */}
-          <View style={styles.rightHalfRow}>
-            <View style={styles.rightBox}>
-              <Text style={styles.rightBoxText}>내 진도</Text>
-            </View>
-            <View style={styles.rightBox}>
-              <Text style={styles.rightBoxText}>내 진도</Text>
-            </View>
-            <View style={styles.rightBox}>
-              <Text style={styles.rightBoxText}>내 진도</Text>
-            </View>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleButtonActive}><Text style={styles.toggleText}>일간</Text></View>
+            <View style={styles.toggleButton}><Text style={styles.toggleText}>주간</Text></View>
+            <View style={styles.toggleButton}><Text style={styles.toggleText}>월간</Text></View>
           </View>
-        </View>
 
-        <View style={styles.noticeCard}>
-          <Text style={styles.noticeTitle}>공지사항</Text>
-          <Text style={styles.noticeContent}>IOS 15.8 업데이트 안내</Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <View style={styles.graphContainer}>
+            {Array.from({ length: 30 }, (_, i) => (
+                <View
+                    key={i}
+                    style={[styles.bar, i === 5 || i === 9 || i === 11 || i === 18 || i === 21 ? styles.barActive : null]}
+                />
+            ))}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
   );
 };
+
+const BAR_WIDTH = 10;
+
 
 const styles = StyleSheet.create({
   container: {
@@ -48,77 +74,92 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   greeting: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '600',
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 20,
-    color: '#555',
-    marginBottom: 24,
-  },
-  horizontalSection: {
-    flexDirection: 'row',
-    marginBottom: 24,
-  },
-  leftHalfBox: {
-    flex: 1,
-    backgroundColor: '#f1f3f5',
-    borderRadius: 16,
-    padding: 20,
-    marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressTitle: {
     fontSize: 18,
-    fontWeight: '500',
-    marginBottom: 8,
+    fontWeight: '400',
+    marginBottom: 24,
   },
-  progressText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#2f80ed',
-  },
-  progressSubText: {
-    fontSize: 16,
-    color: '#888',
-  },
-  rightHalfRow: {
-    flex: 1,
+  cardRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 24,
   },
-  rightBox: {
+  card: {
     flex: 1,
-    backgroundColor: '#e0f7fa',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 12,
-    marginLeft: 4,
-    marginRight: 4,
-  },
-  rightBoxText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  noticeCard: {
-    backgroundColor: '#fff3cd',
+    marginHorizontal: 6, // 카드 사이 여백
+    backgroundColor: '#fafafa',
+    paddingVertical: 24,
     borderRadius: 16,
-    padding: 20,
-    marginTop: 16,
+    alignItems: 'center',
+    minHeight: 220,
   },
-  noticeTitle: {
-    fontSize: 18,
+  cardTitle: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#856404',
     marginBottom: 8,
   },
-  noticeContent: {
+  circle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 6,
+    borderColor: '#ddd',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  percentText: {
     fontSize: 16,
-    color: '#856404',
+    fontWeight: '700',
+  },
+  cardFooter: {
+    fontSize: 12,
+    color: '#aaa',
+    marginBottom: 10,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginBottom: 16,
+    gap: 8,
+  },
+  toggleButtonActive: {
+    backgroundColor: '#f4ca3f',
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  toggleButton: {
+    backgroundColor: '#e0e0e0',
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  graphContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 100,
+    paddingTop: 12,
+  },
+  bar: {
+    width: BAR_WIDTH,
+    height: 10,
+    backgroundColor: '#eee',
+    borderRadius: 2,
+  },
+  barActive: {
+    height: 60,
+    backgroundColor: '#f4ca3f',
   },
 });
 
-export default App;
+export default Dashboard;

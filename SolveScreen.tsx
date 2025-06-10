@@ -15,6 +15,7 @@ import PencilKitView, {
 import { DocumentDirectoryPath } from '@dr.pogodin/react-native-fs';
 import SlideOver from '../components/SlideOverPanel';
 import OMR from '../components/OMR';
+import { MaterialIcons } from 'react-native-vector-icons/MaterialIcons';
 
 const allPens: { label: string; value: PencilKitTool }[] = [
   { label: '펜', value: 'pen' },

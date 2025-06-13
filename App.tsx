@@ -1,14 +1,13 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import { View, Text, StyleSheet } from 'react-native';
 import { enableScreens } from 'react-native-screens';
 import SplashScreen from 'react-native-splash-screen';
-import { GestureHandlerRootView } from 'react-native-gesture-handler'; // ✅ 추가
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import HomeScreen from './screens/HomeScreen';
 import SolveScreen from './screens/SolveScreen';
-
 
 enableScreens();
 
@@ -28,68 +27,32 @@ function Tab4Screen() {
   );
 }
 
-const Tab = createBottomTabNavigator();
+const Drawer = createDrawerNavigator();
 
 export default function App() {
   useEffect(() => {
-    SplashScreen.hide(); // 앱 로딩 완료되자마자 숨김
+    SplashScreen.hide();
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}> {/* ✅ 여기로 감쌈 */}
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarStyle: {
-            backgroundColor: 'white',
-            height: 60,
-            borderTopWidth: 0,
-            elevation: 0,
-          },
-          tabBarLabelStyle: {
-            fontSize: 12,
-            marginBottom: 4,
-          },
-          tabBarActiveTintColor: 'tomato',
-          tabBarInactiveTintColor: 'gray',
-          tabBarIcon: ({ focused }) => {
-            let icon = '❓';
-            if (route.name === '메인') icon = '🏠';
-            else if (route.name === '풀이') icon = '✏️';
-            else if (route.name === '탭3') icon = '📄';
-            else if (route.name === '탭4') icon = '⚙️';
-
-            return (
-              <Text style={{ fontSize: 20, marginBottom: -4 }}>
-                {icon}
-              </Text>
-            );
-          },
-        })}
-      >
-        <Tab.Screen
-          name="메인"
-          component={HomeScreen}
-          options={{ tabBarLabel: '메인' }}
-        />
-        <Tab.Screen
-          name="풀이"
-          component={SolveScreen}
-          options={{ tabBarLabel: '풀이' }}
-        />
-        <Tab.Screen
-          name="탭3"
-          component={Tab3Screen}
-          options={{ tabBarLabel: '탭3' }}
-        />
-        <Tab.Screen
-          name="탭4"
-          component={Tab4Screen}
-          options={{ tabBarLabel: '탭4' }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <Drawer.Navigator
+          drawerType="permanent"
+          screenOptions={{
+            headerShown: false, // 상단 네비게이션 바 제거
+            drawerStyle: {
+              backgroundColor: '#fff',
+              width: 240,
+            },
+          }}
+        >
+          <Drawer.Screen name="메인" component={HomeScreen} />
+          <Drawer.Screen name="풀이" component={SolveScreen} />
+          <Drawer.Screen name="탭3" component={Tab3Screen} />
+          <Drawer.Screen name="탭4" component={Tab4Screen} />
+        </Drawer.Navigator>
+      </NavigationContainer>
     </GestureHandlerRootView>
   );
 }

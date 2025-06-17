@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { View, Text, StyleSheet } from 'react-native';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { enableScreens } from 'react-native-screens';
 import SplashScreen from 'react-native-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,9 +12,6 @@ import TimerScreen from './screens/TimerScreen.tsx';
 import ScoreAnalysisScreen from './screens/ScoreAnalysisScreen';
 
 enableScreens();
-
-
-
 
 function NotificationScreen() {
   return (
@@ -34,6 +31,22 @@ function SettingsScreen() {
 
 const Drawer = createDrawerNavigator();
 
+// ✅ 커스텀 Drawer Content
+function CustomDrawerContent(props) {
+  return (
+    <DrawerContentScrollView {...props}>
+      <View style={styles.logoContainer}>
+        <Image
+          source={require('./assets/OhMoRi.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+      <DrawerItemList {...props} />
+    </DrawerContentScrollView>
+  );
+}
+
 export default function App() {
   useEffect(() => {
     SplashScreen.hide();
@@ -44,6 +57,7 @@ export default function App() {
       <NavigationContainer>
         <Drawer.Navigator
           drawerType="permanent"
+          drawerContent={(props) => <CustomDrawerContent {...props} />}
           screenOptions={{
             headerShown: false,
             drawerStyle: {
@@ -74,5 +88,13 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  logo: {
+    width: 120,
+    height: 40,
   },
 });

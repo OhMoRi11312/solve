@@ -8,6 +8,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import ConfirmDialog from '../components/ConfirmDialog';
 import OMR from '../components/OMR';
 import SlideOver from '../components/SlideOverPanel';
+import TimerMini from '../components/TimerMini';
 
 const allPens: { label: string; value: string; icon: string; }[] = [
   { label: '펜', value: 'pen', icon: 'pen' },
@@ -17,13 +18,10 @@ const allPens: { label: string; value: string; icon: string; }[] = [
   { label: '모노라인', value: 'monoline', icon: 'vector-line' },
   { label: '수채화', value: 'watercolor', icon: 'brush' },
   { label: '붓펜', value: 'fountainPen', icon: 'fountain-pen-tip' },
+  { label: '비트맵 지우개', value: 'eraserBitmap', icon: 'eraser' },
+  { label: '벡터 지우개', value: 'eraserVector', icon: 'eraser-variant' },
 ];
 
-const allErasers: { label: string; value: string; icon: string; }[] = [
-  { label: '비트맵 지우개', value: 'eraserBitmap', icon: '' },
-  { label: '벡터 지우개', value: 'eraserVector', icon: '' },
-  { label: '고정폭 지우개', value: 'eraserFixedWidthBitmap', icon: '' },
-];
 
 
 export default function App() {
@@ -127,20 +125,21 @@ export default function App() {
   return (
       <View style={styles.pageMain} >
         <View style={styles.toolbarSection}>
-          <View style={styles.tabGroup}>
-            <Btn onPress={() => ref.current?.showToolPicker()} text="도구 보이기" />
-            <Btn onPress={() => ref.current?.hideToolPicker()} text="도구 숨기기" />
-            <Btn onPress={() => ref.current?.clear()} text="모두 지우기" />
-            <Btn onPress={() => ref.current?.undo()} text="실행 취소" />
-            <Btn onPress={() => ref.current?.redo()} text="다시 실행" />
+          <View style={styles.tbGroup1}>
+            <View style={styles.tbGrooup1Child}>
+              <Btn onPress={() => ref.current?.showToolPicker()} text="도구 보이기" />
+              <Btn onPress={() => ref.current?.hideToolPicker()} text="도구 숨기기" />
+              <Btn onPress={() => ref.current?.clear()} text="모두 지우기" />
+              <Btn onPress={() => ref.current?.undo()} text="실행 취소" />
+              <Btn onPress={() => ref.current?.redo()} text="다시 실행" />
+            </View>
+            <View style={styles.tbGrooup1Child}>
+              <TimerMini />
+            </View>
           </View>
-          <View style={styles.toolGroup} >
+          <View style={styles.tbGroup2} >
             <View style={styles.functionToolGroup}>
-              <Btn
-                  text={isDrawerOpen ? 'OMR 닫기' : 'OMR 열기'}
-                  onPress={() => setDrawerOpen(!isDrawerOpen)}
-                  variant={2}
-              />
+
             </View>
             <View style={styles.drawingToolGroup}>
               <ToolButtons
@@ -152,12 +151,10 @@ export default function App() {
               />
             </View>
             <View style={styles.eraserToolGroup}>
-              <ToolButtons
-                  tools={allErasers}
-                  onSelect={(tool) => {
-                    ref.current?.setTool({ toolType: tool, width: 4, color: 'black' });
-                    setCurrentTool(tool);
-                  }}
+              <Btn
+                  text={isDrawerOpen ? 'OMR 닫기' : 'OMR 열기'}
+                  onPress={() => setDrawerOpen(!isDrawerOpen)}
+                  variant={2}
               />
             </View>
           </View>
@@ -231,7 +228,7 @@ export default function App() {
               functionToDo(); // 선택된 작업 실행
             }}
         />
-      </View>
+      </View >
   )
 }
 
@@ -308,12 +305,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFE560',
     paddingTop: Platform.OS === 'ios' ? 24 : 0,
   },
-  tabGroup: {
+  tbGroup1: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
     width: '100%',
-    height: 48
+    height: 29,
   },
-  toolGroup: {
+  tbGroup2: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
@@ -321,6 +320,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     backgroundColor: '#FFF1A8',
   },
+  tbGrooup1Child: {
+    flexDirection: 'row',
+  },
+
   functionToolGroup: {
     flexDirection: 'row',
     justifyContent: 'flex-start',

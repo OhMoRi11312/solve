@@ -8,21 +8,26 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import HomeScreen from './screens/HomeScreen';
 import SolveScreen from './screens/SolveScreen';
+import TimerScreen from './screens/TimerScreen.tsx';
+import ScoreAnalysisScreen from './screens/ScoreAnalysisScreen';
 
 enableScreens();
 
-function Tab3Screen() {
+
+
+
+function NotificationScreen() {
   return (
     <View style={styles.center}>
-      <Text style={styles.text}>탭 3 화면</Text>
+      <Text style={styles.text}>お知らせ</Text>
     </View>
   );
 }
 
-function Tab4Screen() {
+function SettingsScreen() {
   return (
     <View style={styles.center}>
-      <Text style={styles.text}>탭 4 화면</Text>
+      <Text style={styles.text}>Setting</Text>
     </View>
   );
 }
@@ -40,17 +45,19 @@ export default function App() {
         <Drawer.Navigator
           drawerType="permanent"
           screenOptions={{
-            headerShown: false, // 상단 네비게이션 바 제거
+            headerShown: false,
             drawerStyle: {
               backgroundColor: '#fff',
               width: 240,
             },
           }}
         >
-          <Drawer.Screen name="메인" component={HomeScreen} />
-          <Drawer.Screen name="풀이" component={SolveScreen} />
-          <Drawer.Screen name="탭3" component={Tab3Screen} />
-          <Drawer.Screen name="탭4" component={Tab4Screen} />
+          <Drawer.Screen name="홈화면" component={HomeScreen} />
+          <Drawer.Screen name="학습" component={SolveScreen} />
+          <Drawer.Screen name="타이머" component={TimerScreen} />
+          <Drawer.Screen name="성적분석" component={ScoreAnalysisScreen} />
+          <Drawer.Screen name="알림" component={NotificationScreen} />
+          <Drawer.Screen name="설정" component={SettingsScreen} />
         </Drawer.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

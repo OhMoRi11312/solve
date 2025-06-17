@@ -74,12 +74,12 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: 35,
     fontWeight: '600',
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '400',
     marginBottom: 24,
   },

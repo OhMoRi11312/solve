@@ -136,15 +136,16 @@ const styles = StyleSheet.create({
   },
   pdfContainer: {
     flex: 1,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: 'white',
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    backgroundColor: 'transparent', // 흰색 말고 투명
   },
   webview: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent', // 투명으로 두는 게 좋음
   },
   errorText: {
     color: 'red',

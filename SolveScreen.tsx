@@ -33,7 +33,7 @@ export default function App() {
   const [imageBase64, setImageBase64] = useState('');
   const [toolColors, setToolColors] = useState<Record<PencilKitTool, string>>({});
   const [currentTool, setCurrentTool] = useState<PencilKitTool | null>(null);
-  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: string[] }>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: string[] | string }>({});
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [drawerType, setDrawerType] = useState<'front' | 'slide'>('front')
   const [showConfirm, setShowConfirm] = useState(false);
@@ -42,7 +42,62 @@ export default function App() {
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
   const [base64Pdf, setBase64Pdf] = useState<string | null>(null);
   const [webViewReady, setWebViewReady] = useState(false);
+  const [questions, setQuestions] = useState<{ [key: number]: { answer: string; type: string } }>({});
 
+
+  useEffect(() => {
+    const raw = `
+      1 ②
+      2 ①
+      3 ③
+      4 ③
+      5 ②
+      6 ④
+      7 ⑤
+      8 ⑤
+      9 ②
+      10 ①
+      11 ⑤
+      12 ②
+      13 ④
+      14 ②
+      15 ①
+      16 2
+      17 6
+      18 133
+      19 8
+      20 85
+      21 42
+      22 38
+    `;
+    const choiceMap = {
+      '①': '1',
+      '②': '2',
+      '③': '3',
+      '④': '4',
+      '⑤': '5',
+    };
+
+    const parsed: { [key: number]: { answer: string, type: '' | 'selone' | 'short' } } = {};
+    const lines = raw.trim().split('\n');   // 행 별로 정답 추출
+
+    lines.forEach(line => {
+      const [number, string] = line.trim().split(/\s+/);
+      const qNum = parseInt(number, 10);
+      parsed[qNum] = { answer: '', type: '' };
+
+      // 객관식 심볼인지 체크
+      if (string && string.length === 1 && Object.keys(choiceMap).includes(string)) {
+        parsed[qNum].answer = choiceMap[string];
+        parsed[qNum].type = 'selone';
+      } else {
+        parsed[qNum].answer = string;
+        parsed[qNum].type = 'short'
+      }
+    });
+    console.log(parsed)
+    setQuestions(parsed);
+  }, []);
   const pickPdf = async () => {
     try {
       const res = await DocumentPicker.pickSingle({
@@ -65,65 +120,6 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    const raw = `
-      1 ②
-      6 ③
-      2 ④
-      7 ②
-      3 ④
-      8 ⑤
-      4 ②
-      9 ①
-      5 ③
-      10 ⑤
-      11 ④
-      16 ①
-      21 ①
-      26 ①
-      31 ①
-      12 ⑤
-      17 ⑤
-      22 ①
-      27 ④
-      32 ①
-      13 ③
-      18 ④
-      23 ③
-      28 ①
-      33 ⑤
-      14 ②
-      19 ②
-      24 ④
-      29 ①
-      34 ②
-      15 ①
-      20 ⑤
-      25 ⑤
-      30 ④
-    `;
-    const choiceMap: Record<string, string> = {
-      '①': '1',
-      '②': '2',
-      '③': '3',
-      '④': '4',
-      '⑤': '5',
-    };
-
-    const parsed: { [key: number]: string } = {};
-    const regex = /(\d+)\s([①-⑤])/g;
-    let match;
-
-    while ((match = regex.exec(raw)) !== null) {
-      const number = parseInt(match[1], 10);
-      const answer = choiceMap[match[2]]; // 숫자로 변환
-      parsed[number] = answer;
-    }
-
-
-    console.log(parsed)
-    setAnswers(parsed);
-  }, []);
   function showDialog(message: string, action: () => void) {
     setDialogMessage(message);
     setFunctionToDo(() => action); // 콜백 저장
@@ -131,143 +127,204 @@ export default function App() {
   }
 
   function handleGrading() {
-    const answerKey = answers;
-    let correct = 0;
+    let correctCount = 0;
+    let questionsLength = Object.keys(questions).length;
+    let graded_count = 0;
 
-    Object.entries(answerKey).forEach(([qIndex, correctAnswer]) => {
-      const selected = selectedAnswers[+qIndex - 1] || [];
-      console.log(`문항 ${qIndex}: 정답=${correctAnswer}, 선택=${selected}`);
+    for (const [qNumStr, selected] of Object.entries(selectedAnswers)) {
+      const qNum = parseInt(qNumStr, 10);
+      const correctAnswer = questions[qNum]?.answer;
+      const questionType = questions[qNum]?.type;
 
-      if (
-          selected.length === 1 &&
-          selected[0] === correctAnswer
-      ) {
-        correct += 1;
+      if (questionType === 'selone') {
+        if (Array.isArray(selected) && selected.length === 1) {
+          graded_count++;
+          if (selected[0] === correctAnswer) {
+            correctCount++;
+          }
+        }
       }
-    });
+      else if (questionType === 'short') {
+        if (typeof selected === 'string' && selected.trim() !== '') {
+          graded_count++;
+          if (parseInt(selected) === parseInt(correctAnswer)) {
+            correctCount++;
+          }
+        }
+      }
+    }
 
-    alert(`정답 수: ${correct}개`);
+    const wrongCount = graded_count - correctCount;
+    const ungradedCount = questionsLength - graded_count;
+
+    alert(`총 문항 수: ${questionsLength}\n정답: ${correctCount}개\n오답: ${wrongCount}개\n무표기: ${ungradedCount}개`);
   }
 
   return (
-      <View style={styles.pageMain} >
-        <View style={styles.toolbarSection}>
-          <View style={styles.tbGroup1}>
-            <View style={styles.tbGrooup1Child}>
-              <Btn onPress={() => ref.current?.showToolPicker()} text="도구 보이기" />
-              <Btn onPress={() => ref.current?.hideToolPicker()} text="도구 숨기기" />
-              <Btn onPress={() => ref.current?.clear()} text="모두 지우기" />
-              <Btn onPress={() => ref.current?.undo()} text="실행 취소" />
-              <Btn onPress={() => ref.current?.redo()} text="다시 실행" />
-            </View>
-            <View style={styles.tbGrooup1Child}>
-              <TimerMini />
-            </View>
+    <View style={styles.pageMain}>
+      <View style={styles.toolbarSection}>
+        <View style={styles.tbGroup1}>
+          <View style={styles.tbGrooup1Child}>
+            <Btn
+              onPress={() => ref.current?.showToolPicker()}
+              text="도구 보이기"
+            />
+            <Btn
+              onPress={() => ref.current?.hideToolPicker()}
+              text="도구 숨기기"
+            />
+            <Btn onPress={() => ref.current?.clear()} text="모두 지우기" />
+            <Btn onPress={() => ref.current?.undo()} text="실행 취소" />
+            <Btn onPress={() => ref.current?.redo()} text="다시 실행" />
           </View>
-          <View style={styles.tbGroup2} >
-            <View style={styles.functionToolGroup}>
-
-            </View>
-            <View style={styles.drawingToolGroup}>
-              <ToolButtons
-                  tools={allPens}
-                  onSelect={(tool) => {
-                    ref.current?.setTool({ toolType: tool, width: 4, color: 'black' });
-                    setCurrentTool(tool);
-                  }}
-              />
-            </View>
-            <View style={styles.eraserToolGroup}>
-              <Btn
-                  text="PDF 열기"
-                  onPress={pickPdf}
-                  variant={2}
-              />
-              <Btn
-                  text={isDrawerOpen ? 'OMR 닫기' : 'OMR 열기'}
-                  onPress={() => setDrawerOpen(!isDrawerOpen)}
-                  variant={2}
-              />
-            </View>
+          <View style={styles.tbGrooup1Child}>
+            <TimerMini />
           </View>
-          {/* </ScrollView> */}
         </View>
-        <SlideOver
-            drawerType={drawerType}
-            backTouchable={false}
-            open={isDrawerOpen}
-            setOpen={setDrawerOpen}
-            drawerStyle={styles.slideoverPanel}
-            drawerPosition={'right'}
-            innerComponent={
-              <View style={{ width: '100%', height: '100%', borderTopRightRadius: 25, borderBottomRightRadius: 25, }}>
-                <TouchableOpacity
-                    onPress={() => {
-                      setDrawerType(prev => prev === 'front' ? 'slide' : 'front')
-                    }}
-                    style={{ width: 24, height: 24, flexDirection: 'row', alignSelf: 'flex-end', marginRight: 10, }}
-                >
-                  <MaterialCommunityIcons name={drawerType === 'slide' ? 'view-column' : 'dock-right'} size={24} color="#007AFF" />
-                </TouchableOpacity>
+        <View style={styles.tbGroup2}>
+          <View style={styles.functionToolGroup}></View>
+          <View style={styles.drawingToolGroup}>
+            <ToolButtons
+              tools={allPens}
+              onSelect={tool => {
+                ref.current?.setTool({
+                  toolType: tool,
+                  width: 4,
+                  color: 'black',
+                });
+                setCurrentTool(tool);
+              }}
+            />
+          </View>
+          <View style={styles.eraserToolGroup}>
+            <Btn text="PDF 열기" onPress={pickPdf} variant={2} />
+            <Btn
+              text={isDrawerOpen ? 'OMR 닫기' : 'OMR 열기'}
+              on={isDrawerOpen}
+              onPress={() => setDrawerOpen(!isDrawerOpen)}
+              variant={2}
+            />
+          </View>
+        </View>
+        {/* </ScrollView> */}
+      </View>
+      <SlideOver
+        drawerType={drawerType}
+        backTouchable={false}
+        open={isDrawerOpen}
+        setOpen={setDrawerOpen}
+        drawerStyle={styles.slideoverPanel}
+        drawerPosition={'right'}
+        innerComponent={
+          <View
+            style={{
+              width: '100%',
+              height: '100%',
+              borderTopRightRadius: 25,
+              borderBottomRightRadius: 25,
+            }}>
+            <TouchableOpacity
+              onPress={() => {
+                setDrawerType(prev => (prev === 'front' ? 'slide' : 'front'));
+              }}
+              style={{
+                width: 24,
+                height: 24,
+                flexDirection: 'row',
+                alignSelf: 'flex-end',
+                marginRight: 10,
+              }}>
+              <MaterialCommunityIcons
+                name={drawerType === 'slide' ? 'view-column' : 'dock-right'}
+                size={24}
+                color="#007AFF"
+              />
+            </TouchableOpacity>
 
-                <ScrollView>
-                  <OMR
-                      numQuestions={Object.keys(answers).length}
-                      optionsPerQuestion={['1', '2', '3', '4', '5']}
-                      selectedAnswers={selectedAnswers}
-                      setSelectedAnswers={setSelectedAnswers}
-                  />
-                </ScrollView>
-                <TouchableOpacity
-                    onPress={() => showDialog("OMR을 교체합니다.", () => { setSelectedAnswers([]) })}
-                    style={{ padding: 5, width: 225 }}
-                >
-                  <Text style={{ color: '#007AFF', textAlign: 'center', marginTop: 25, }}>OMR 교체</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    onPress={() => showDialog("채점을 진행 합니다.", handleGrading)}
-                    style={{ padding: 5, width: 225 }}
-                >
-                  <Text style={{ color: '#007AFF', textAlign: 'center', marginBottom: 25, }}>제출 및 채점</Text>
-                </TouchableOpacity>
-              </View>
-            }
-            mainContent={
-              < View style={styles.canvasWrapper} >
-                <PencilKitView
-                    ref={ref}
-                    style={styles.canvas}
-                    alwaysBounceVertical={false}
-                    alwaysBounceHorizontal={false}
-                    backgroundColor={'#f0ebc0'}
-                />
+            <ScrollView>
+              <OMR
+                questions={questions}
+                selectedAnswers={selectedAnswers}
+                setSelectedAnswers={setSelectedAnswers}
+              />
+            </ScrollView>
+            <TouchableOpacity
+              onPress={() =>
+                showDialog('OMR을 교체합니다.', () => {
+                  setSelectedAnswers([]);
+                })
+              }
+              style={{padding: 5, width: 225}}>
+              <Text
+                style={{color: '#007AFF', textAlign: 'center', marginTop: 25}}>
+                OMR 교체
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => showDialog('채점을 진행 합니다.', handleGrading)}
+              style={{padding: 5, width: 225}}>
+              <Text
+                style={{
+                  color: '#007AFF',
+                  textAlign: 'center',
+                  marginBottom: 25,
+                }}>
+                제출 및 채점
+              </Text>
+            </TouchableOpacity>
+          </View>
+        }
+        mainContent={
+          <View style={{flex: 1}}>
+            {/* 겹쳐지는 구조 */}
+            <View style={{flex: 1}}>
+              <PdfViewerScreen
+                base64Pdf={base64Pdf}
+                webViewReady={webViewReady}
+                setWebViewReady={setWebViewReady}
+              />
+            </View>
 
-                <PdfViewerScreen
-                    base64Pdf={base64Pdf}
-                    webViewReady={webViewReady}
-                    setWebViewReady={setWebViewReady}
-                />
-                {
-                  imageBase64 ? (
-                      <Image
-                          style={styles.previewImage}
-                          source={{ uri: imageBase64 }}
-                      />
-                  ) : null}
-              </View>
-            }
-        />
-        <ConfirmDialog
-            visible={showConfirm}
-            message={dialogMessage}
-            onCancel={() => setShowConfirm(false)}
-            onConfirm={() => {
-              setShowConfirm(false);
-              functionToDo(); // 선택된 작업 실행
-            }}
-        />
-      </View >
-  )
+            {/*<PencilKitView*/}
+            {/*  ref={ref}*/}
+            {/*  style={{*/}
+            {/*    position: 'absolute',*/}
+            {/*    top: 0,*/}
+            {/*    left: 0,*/}
+            {/*    right: 0,*/}
+            {/*    bottom: 0,*/}
+            {/*    backgroundColor: 'transparent',*/}
+            {/*  }}*/}
+            {/*  backgroundColor="transparent"*/}
+            {/*  isOpaque={false}*/}
+            {/*/>*/}
+            <PencilKitView
+                ref={ref}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0,0,0,0)',
+                }}
+                backgroundColor="transparent"
+                isOpaque={false}
+            />
+          </View>
+        }
+      />
+      <ConfirmDialog
+        visible={showConfirm}
+        message={dialogMessage}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false);
+          functionToDo(); // 선택된 작업 실행
+        }}
+      />
+    </View>
+  );
 }
 
 const Btn = ({
@@ -390,30 +447,43 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   defaultButton: {
-    backgroundColor: '#000000',
     paddingHorizontal: 6,
     paddingVertical: 3,
+  },
+  ButtonOFF: {
+    backgroundColor: 'transparent',
+    color: '#000000',
+    borderColor: '#000000',
+  },
+  ButtonON: {
+    backgroundColor: '#000000',
     color: '#ffffff',
+    borderColor: '#000000',
   },
 
 
   canvasWrapper: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    position: 'relative', // 자식들 position:absolute 쓸 수 있도록
   },
   canvas: {
     flex: 1,
   },
   previewImage: {
-    borderWidth: 1,
-    borderColor: '#2224',
-    borderRadius: 12,
     position: 'absolute',
-    right: 0,
-    bottom: 0,
+    right: 16,
+    bottom: 16,
+    width: 120,
+    height: 120,
+    borderRadius: 8,
     backgroundColor: 'white',
-    width: 160,
-    height: 160,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5, // Android 그림자
   },
 
   slideoverPanel: {

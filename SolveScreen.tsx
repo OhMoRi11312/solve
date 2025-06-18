@@ -9,6 +9,9 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import OMR from '../components/OMR';
 import SlideOver from '../components/SlideOverPanel';
 import TimerMini from '../components/TimerMini';
+import PdfViewerScreen from '../components/PdfViewerScreen';
+import DocumentPicker from 'react-native-document-picker';
+import BlobUtil from 'react-native-blob-util';
 
 const allPens: { label: string; value: string; icon: string; }[] = [
   { label: '펜', value: 'pen', icon: 'pen' },
@@ -37,6 +40,30 @@ export default function App() {
   const [dialogMessage, setDialogMessage] = useState('');
   const [functionToDo, setFunctionToDo] = useState<() => void>(() => () => { });
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+  const [base64Pdf, setBase64Pdf] = useState<string | null>(null);
+  const [webViewReady, setWebViewReady] = useState(false);
+
+  const pickPdf = async () => {
+    try {
+      const res = await DocumentPicker.pickSingle({
+        type: [DocumentPicker.types.pdf],
+        copyTo: 'cachesDirectory',
+      });
+
+      let uri = decodeURIComponent(res.fileCopyUri || res.uri);
+      if (uri.startsWith('file://')) {
+        uri = uri.replace('file://', '');
+      }
+
+      const exists = await BlobUtil.fs.exists(uri);
+      if (!exists) throw new Error('파일이 존재하지 않음');
+
+      const base64 = await BlobUtil.fs.readFile(uri, 'base64');
+      setBase64Pdf(base64);
+    } catch (err) {
+      console.error('PDF 선택 실패', err);
+    }
+  };
 
   useEffect(() => {
     const raw = `
@@ -152,6 +179,11 @@ export default function App() {
             </View>
             <View style={styles.eraserToolGroup}>
               <Btn
+                  text="PDF 열기"
+                  onPress={pickPdf}
+                  variant={2}
+              />
+              <Btn
                   text={isDrawerOpen ? 'OMR 닫기' : 'OMR 열기'}
                   onPress={() => setDrawerOpen(!isDrawerOpen)}
                   variant={2}
@@ -208,6 +240,12 @@ export default function App() {
                     alwaysBounceVertical={false}
                     alwaysBounceHorizontal={false}
                     backgroundColor={'#f0ebc0'}
+                />
+
+                <PdfViewerScreen
+                    base64Pdf={base64Pdf}
+                    webViewReady={webViewReady}
+                    setWebViewReady={setWebViewReady}
                 />
                 {
                   imageBase64 ? (

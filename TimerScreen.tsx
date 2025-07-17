@@ -1,5 +1,3 @@
-// ✅ 전체 반영된 TimerScreen 코드: 기존 기능 + 그리드 저장
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -42,36 +40,32 @@ export default function TimerScreen() {
   };
   useEffect(() => {
     let timer = null;
+
     if (startTime) {
       timer = setInterval(async () => {
         const now = new Date();
-        const elapsed = Math.floor((now - startTime) / 1000);
 
-        // ✅ 날짜가 바뀌었는지 확인
-        const startDay = startTime.getDate();
-        const nowDay = now.getDate();
-        const startMonth = startTime.getMonth();
-        const nowMonth = now.getMonth();
-        const startYear = startTime.getFullYear();
-        const nowYear = now.getFullYear();
+        // 기준: 오전 5시
+        const resetTime = new Date();
+        resetTime.setHours(5, 0, 0, 0); // 오늘 오전 5시 정각
 
-        const isDifferentDate =
-          startDay !== nowDay ||
-          startMonth !== nowMonth ||
-          startYear !== nowYear;
+        // 오전 5시가 지났고, startTime은 그 전이면 초기화
+        const needReset = startTime < resetTime && now >= resetTime;
 
-        if (isDifferentDate) {
+        if (needReset) {
           try {
             await AsyncStorage.removeItem('filledCells');
-            setStartTime(now); // 새 날짜 기준으로 갱신
-            console.log('filledCells 초기화됨');
+            setFilledCells([]);
+            setStartTime(now); // 기준 시간 갱신
+            console.log('오전 5시가 지나 초기화됨');
           } catch (e) {
             console.error('초기화 오류:', e);
           }
         }
 
-        // 1분마다 그리드 저장
-        if (elapsed % (1 * 60) === 0) {
+        // 15분마다 저장
+        const elapsed = Math.floor((now - startTime) / 1000);
+        if (elapsed % (15 * 60) === 0) {
           const hour = now.getHours();
           const minute = now.getMinutes();
           const col = (hour - 5 + 24) % 24;
@@ -91,6 +85,7 @@ export default function TimerScreen() {
         }
       }, 1000);
     }
+
     return () => clearInterval(timer);
   }, [startTime]);
 
